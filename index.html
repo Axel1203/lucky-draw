@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>尊榮幸運抽獎系統</title>
+  <title>尊榮幸運大抽獎</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- SheetJS (xlsx) 用於解析與匯出 Excel -->
@@ -61,12 +61,12 @@
   <header class="max-w-7xl mx-auto w-full mb-6 text-center">
     <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs md:text-sm font-semibold mb-2">
       <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-      智能防重複抽獎系統
+      智能防重複抽獎系統 &bull; 支援自動存檔恢復
     </div>
     <h1 class="text-3xl md:text-5xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-200 to-yellow-500">
       尊榮幸運大抽獎
     </h1>
-    <p class="text-slate-400 text-xs md:text-sm mt-1">匯入名單・自訂名額・動態跑馬特效・保證零重複中獎</p>
+    <p class="text-slate-400 text-xs md:text-sm mt-1">匯入名單・自訂名額・動態跑馬特效・斷電重整自動接續進度</p>
   </header>
 
   <!-- 主內容工作區 -->
@@ -77,10 +77,16 @@
       
       <!-- 檔案匯入卡片 -->
       <div class="bg-slate-900/80 backdrop-blur border border-slate-700/80 rounded-2xl p-5 shadow-xl">
-        <h2 class="text-base font-bold text-amber-300 flex items-center gap-2 mb-3">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-          第一步：匯入抽獎名單 (Excel / CSV)
-        </h2>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-base font-bold text-amber-300 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            第一步：匯入抽獎名單
+          </h2>
+          <!-- 自動儲存狀態標籤 -->
+          <span id="storageStatusBadge" class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>自動儲存已啟用
+          </span>
+        </div>
 
         <div class="relative border-2 border-dashed border-slate-600 hover:border-amber-400/80 transition-colors rounded-xl p-4 text-center cursor-pointer bg-slate-800/40" id="dropArea">
           <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
@@ -146,7 +152,7 @@
             </button>
           </div>
 
-          <!-- 獎項快捷標籤列表 (可點選切換或點擊 x 刪除) -->
+          <!-- 獎項快捷標籤列表 -->
           <div class="space-y-1">
             <div class="text-[11px] text-slate-400 flex items-center justify-between">
               <span>已建立獎項清單 (點擊選用 / 點 × 移除)：</span>
@@ -231,7 +237,7 @@
         <div class="absolute bottom-3 left-4 right-4 flex justify-between items-center text-[11px] text-slate-500 font-mono">
           <span id="antiDuplicationBadge" class="flex items-center gap-1.5 text-emerald-400">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-            防重複安全檢驗啟動中
+            防重複中獎機制運作中
           </span>
           <span id="drawProgressIndicator">狀態：閒置中</span>
         </div>
@@ -246,17 +252,21 @@
               <span>🏆 中獎星光榜</span>
               <span id="winnerBadgeCount" class="bg-amber-500/20 text-amber-300 text-xs px-2.5 py-0.5 rounded-full border border-amber-500/30">0 人中獎</span>
             </h3>
-            <p class="text-xs text-slate-400 mt-0.5">所有抽出之得獎者已自動自名單剔除，絕無重複！</p>
+            <p class="text-xs text-slate-400 mt-0.5">所有抽出之得獎者已自動剔除，重新整理亦自動保存進度！</p>
           </div>
 
-          <!-- 功能操作按鈕 -->
-          <div class="flex items-center gap-2">
+          <!-- 功能操作按鈕區 (含全新：清除所有抽獎資料功能) -->
+          <div class="flex items-center gap-2 flex-wrap">
             <button id="exportExcelBtn" class="px-3 py-1.5 rounded-lg bg-emerald-600/20 border border-emerald-500/30 hover:bg-emerald-600/30 text-emerald-300 text-xs font-semibold flex items-center gap-1.5 transition">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               匯出中獎名單 (Excel)
             </button>
-            <button id="resetWinnersBtn" class="px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 text-xs font-semibold transition">
-              重設紀錄
+            <button id="resetWinnersBtn" class="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 text-amber-300 text-xs font-semibold transition" title="僅清空中獎名單並將人員返還候選池">
+              重設得獎名單
+            </button>
+            <button id="clearAllDataBtn" class="px-3 py-1.5 rounded-lg bg-red-500/15 border border-red-500/40 hover:bg-red-500/25 text-red-300 text-xs font-semibold flex items-center gap-1 transition" title="徹底清空名單、中獎資料與瀏覽器存檔">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              清除所有抽獎資料
             </button>
           </div>
         </div>
@@ -300,7 +310,7 @@
         </button>
       </div>
       <div>
-        <div id="editNoteTargetInfo" class="text-xs text-slate-400 mb-2 font-medium">
+        <div class="text-xs text-slate-400 mb-2 font-medium">
           得獎者：<span class="text-white font-bold" id="editNoteTargetName">-</span>
         </div>
         <textarea id="editNoteInput" rows="3" placeholder="請輸入備註內容 (如：分機號碼、代領人、已領取等)..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-400 resize-none"></textarea>
@@ -316,20 +326,52 @@
     </div>
   </div>
 
+  <!-- 自訂二次確認彈窗 (取代危險的 confirm) -->
+  <div id="confirmModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-red-500/40 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+      <div class="flex items-center gap-3 text-red-400">
+        <div class="p-2.5 rounded-full bg-red-500/20 shrink-0">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-white" id="confirmModalTitle">確定要清除所有抽獎資料？</h3>
+          <p class="text-xs text-slate-400 mt-0.5">本操作無法復原</p>
+        </div>
+      </div>
+      <p class="text-xs text-slate-300 leading-relaxed bg-slate-800/80 p-3 rounded-xl border border-slate-700/80" id="confirmModalDesc">
+        這將會徹底清空已匯入的候選名單、中獎星光榜紀錄及自訂獎項，並移除瀏覽器本機的全部抽獎快取。
+      </p>
+      <div class="flex items-center justify-end gap-2 pt-1">
+        <button id="cancelConfirmModalBtn" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition">
+          取消
+        </button>
+        <button id="executeConfirmModalBtn" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-md transition">
+          確認徹底清除
+        </button>
+      </div>
+    </div>
+  </div>
+
   <footer class="max-w-7xl mx-auto w-full text-center text-slate-600 text-xs mt-6">
-    尊榮抽獎系統 &bull; 內建安全演算法與純前端 Excel 解析技術
+    尊榮抽獎系統 &bull; 內建安全演算法、純前端 Excel 解析與 LocalStorage 狀態恢復機制
   </footer>
 
   <script>
     /* ==========================================================================
+       專屬 LocalStorage 命名空間鍵名 (絕不影響其他網站資料)
+       ========================================================================== */
+    const STORAGE_KEY = 'LUCKY_DRAW_APP_STATE_V1';
+
+    /* ==========================================================================
        狀態管理 (State Management)
        ========================================================================== */
     const state = {
-      allCandidates: [],    // 初始載入的原始名單全集
+      allCandidates: [],    // 初始載入的原始名單全集 [{ uid, id, name, extra }]
       availablePool: [],    // 剩餘可抽名單 (排除已中獎者)
       winners: [],          // 已中獎者集合 [{ uid, id, name, extra, prize, time }]
       isRolling: false,     // 是否正處於開獎循環中
       audioCtx: null,       // Web Audio Context 用於緊張倒數與中獎勝利號角
+      sourceName: '',       // 當前名單來源檔案名稱
       prizeList: [          // 可自訂增減的獎項列表
         '頭獎 - 尊榮神秘大禮',
         '貳獎 - 高級平板電腦',
@@ -348,6 +390,7 @@
     const loadSampleBtn = document.getElementById('loadSampleBtn');
     const totalCountBadge = document.getElementById('totalCountBadge');
     const remainingCountBadge = document.getElementById('remainingCountBadge');
+    const storageStatusBadge = document.getElementById('storageStatusBadge');
     
     const prizeTitleInput = document.getElementById('prizeTitleInput');
     const prizeQuickSelect = document.getElementById('prizeQuickSelect');
@@ -376,6 +419,7 @@
     const noWinnersPlaceholder = document.getElementById('noWinnersPlaceholder');
     const exportExcelBtn = document.getElementById('exportExcelBtn');
     const resetWinnersBtn = document.getElementById('resetWinnersBtn');
+    const clearAllDataBtn = document.getElementById('clearAllDataBtn');
 
     // 備註彈窗 DOM 節點
     const editNoteModal = document.getElementById('editNoteModal');
@@ -385,6 +429,97 @@
     const cancelNoteModalBtn = document.getElementById('cancelNoteModalBtn');
     const saveNoteModalBtn = document.getElementById('saveNoteModalBtn');
     let currentEditingWinnerIndex = -1;
+
+    // 二次確認彈窗 DOM 節點
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmModalTitle = document.getElementById('confirmModalTitle');
+    const confirmModalDesc = document.getElementById('confirmModalDesc');
+    const cancelConfirmModalBtn = document.getElementById('cancelConfirmModalBtn');
+    const executeConfirmModalBtn = document.getElementById('executeConfirmModalBtn');
+    let onConfirmAction = null;
+
+    /* ==========================================================================
+       自動儲存與資料恢復 (localStorage 自動儲存機制與容量防禦)
+       ========================================================================== */
+    function saveStateToStorage() {
+      try {
+        const payload = {
+          allCandidates: state.allCandidates,
+          winners: state.winners,
+          prizeList: state.prizeList,
+          currentPrize: prizeTitleInput.value.trim(),
+          sourceName: state.sourceName,
+          savedAt: new Date().toISOString()
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        if (storageStatusBadge) {
+          storageStatusBadge.className = 'text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1';
+          storageStatusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>已自動儲存`;
+        }
+      } catch (err) {
+        // 儲存空間超額或其他儲存錯誤
+        if (storageStatusBadge) {
+          storageStatusBadge.className = 'text-[10px] px-2 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/30 flex items-center gap-1';
+          storageStatusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>儲存失敗`;
+        }
+        let errMsg = '瀏覽器本機儲存空間不足或儲存失敗，資料可能無法於重新整理後恢復！';
+        if (err.name === 'QuotaExceededError' || err.code === 22) {
+          errMsg = '【儲存失敗】瀏覽器 LocalStorage 空間已滿，請匯出中獎名單後清理資料！';
+        }
+        showToast(errMsg, 'error');
+        console.error('LocalStorage save error:', err);
+      }
+    }
+
+    function loadStateFromStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+
+        const data = JSON.parse(raw);
+        if (!data || typeof data !== 'object') return false;
+
+        if (Array.isArray(data.allCandidates) && data.allCandidates.length > 0) {
+          state.allCandidates = data.allCandidates;
+        }
+        if (Array.isArray(data.winners)) {
+          state.winners = data.winners;
+        }
+        if (Array.isArray(data.prizeList) && data.prizeList.length > 0) {
+          state.prizeList = data.prizeList;
+        }
+        if (data.currentPrize) {
+          prizeTitleInput.value = data.currentPrize;
+        }
+        if (data.sourceName) {
+          state.sourceName = data.sourceName;
+          fileInfoText.innerText = `${data.sourceName} (${state.allCandidates.length} 筆)`;
+        } else if (state.allCandidates.length > 0) {
+          fileInfoText.innerText = `已恢復名單 (${state.allCandidates.length} 筆)`;
+        }
+
+        // 嚴密防重複中獎恢復：根據已中獎者的 uid 重塑 availablePool
+        rebuildAvailablePool();
+        renderPrizeList();
+        renderWinnersList();
+        updateUIStats();
+
+        if (state.winners.length > 0) {
+          const lastWinner = state.winners[0];
+          rollingSubtitle.innerText = `上次中獎紀錄：${lastWinner.prize}`;
+          rollingPrimaryName.innerText = lastWinner.name;
+          rollingPrimaryName.classList.add('text-yellow-300');
+          rollingExtraInfo.innerText = lastWinner.extra || `編號：${lastWinner.id}`;
+          stagePrizeLabel.innerText = `獎項：${lastWinner.prize}`;
+        }
+
+        showToast(`已自動恢復上次抽獎進度 (共 ${state.allCandidates.length} 筆候選人，${state.winners.length} 人已中獎)`, 'info');
+        return true;
+      } catch (err) {
+        console.warn('恢復本機快取資料失敗:', err);
+        return false;
+      }
+    }
 
     /* ==========================================================================
        音效系統 (Web Audio API)
@@ -469,8 +604,37 @@
       clearTimeout(toastTimeout);
       toastTimeout = setTimeout(() => {
         toast.classList.add('translate-y-28');
-      }, 3000);
+      }, 3500);
     }
+
+    /* ==========================================================================
+       自訂二次確認對話框 (保證不受 iframe 沙盒限制)
+       ========================================================================== */
+    function openConfirmModal(title, desc, onConfirm) {
+      confirmModalTitle.innerText = title;
+      confirmModalDesc.innerText = desc;
+      onConfirmAction = onConfirm;
+      confirmModal.classList.remove('hidden');
+    }
+
+    function closeConfirmModal() {
+      confirmModal.classList.add('hidden');
+      onConfirmAction = null;
+    }
+
+    cancelConfirmModalBtn.addEventListener('click', closeConfirmModal);
+    executeConfirmModalBtn.addEventListener('click', () => {
+      if (typeof onConfirmAction === 'function') {
+        onConfirmAction();
+      }
+      closeConfirmModal();
+    });
+
+    confirmModal.addEventListener('click', (e) => {
+      if (e.target === confirmModal) {
+        closeConfirmModal();
+      }
+    });
 
     /* ==========================================================================
        獎項清單管理 (新增、刪除、切換)
@@ -493,13 +657,13 @@
       `).join('');
     }
 
-    // 選取獎項至輸入欄
     window.selectPrize = function(name) {
       prizeTitleInput.value = name;
+      stagePrizeLabel.innerText = `準備抽取：${name}`;
+      saveStateToStorage();
       showToast(`已切換為：${name}`, 'info');
     };
 
-    // 移除指定獎項
     window.removePrize = function(index) {
       if (state.prizeList.length <= 1) {
         showToast('請至少保留一個獎項！', 'error');
@@ -510,9 +674,9 @@
         prizeTitleInput.value = state.prizeList[0] || '幸運大獎';
       }
       renderPrizeList();
+      saveStateToStorage();
     };
 
-    // 新增獎項處理
     function handleAddNewPrize() {
       const val = newPrizeInput.value.trim();
       if (!val) {
@@ -526,8 +690,10 @@
 
       state.prizeList.push(val);
       prizeTitleInput.value = val;
+      stagePrizeLabel.innerText = `準備抽取：${val}`;
       newPrizeInput.value = '';
       renderPrizeList();
+      saveStateToStorage();
       showToast(`已成功新增獎項：「${val}」`, 'success');
     }
 
@@ -542,7 +708,14 @@
     prizeQuickSelect.addEventListener('change', (e) => {
       if (e.target.value) {
         prizeTitleInput.value = e.target.value;
+        stagePrizeLabel.innerText = `準備抽取：${e.target.value}`;
+        saveStateToStorage();
       }
+    });
+
+    prizeTitleInput.addEventListener('change', () => {
+      stagePrizeLabel.innerText = `準備抽取：${prizeTitleInput.value.trim() || '幸運大獎'}`;
+      saveStateToStorage();
     });
 
     /* ==========================================================================
@@ -560,7 +733,6 @@
         let id = '';
         let extra = [];
 
-        // 遍歷所有屬性
         for (const [key, val] of Object.entries(row)) {
           if (val === null || val === undefined || val === '') continue;
           const cleanKey = String(key).trim();
@@ -600,11 +772,16 @@
       }
 
       state.allCandidates = [...normalized];
-      // 同步過濾掉已經在 winners 中的人員
+      state.sourceName = sourceName;
+      fileInfoText.innerText = `${sourceName} (${normalized.length} 筆)`;
+
+      // 同步過濾掉已經在 winners 中的人員 (嚴格防重複)
       rebuildAvailablePool();
 
-      fileInfoText.innerText = `${sourceName} (${normalized.length} 筆)`;
-      showToast(`成功匯入 ${normalized.length} 筆抽獎名單！`, 'success');
+      // 觸發自動儲存
+      saveStateToStorage();
+
+      showToast(`成功匯入 ${normalized.length} 筆抽獎名單，並已自動儲存至本機！`, 'success');
       updateUIStats();
     }
 
@@ -754,8 +931,6 @@
        ========================================================================== */
     function launchConfetti() {
       if (typeof confetti !== 'function') return;
-      
-      // 中央星光爆發
       confetti({
         particleCount: 80,
         spread: 90,
@@ -763,7 +938,6 @@
         colors: ['#facc15', '#eab308', '#ffffff', '#38bdf8', '#fb7185']
       });
 
-      // 兩側禮炮交錯
       setTimeout(() => {
         confetti({
           particleCount: 50,
@@ -823,8 +997,12 @@
           prize: currentPrize,
           time: new Date().toLocaleTimeString('zh-TW', { hour12: false })
         });
+        
         rebuildAvailablePool();
         renderWinnersList();
+        
+        // 核心需求：每次抽出一位得獎者後，立即自動寫入 localStorage 保存
+        saveStateToStorage();
 
         // 慶祝特效與音效
         playWinSound();
@@ -841,42 +1019,38 @@
       drawSpinner.classList.add('hidden');
       drawProgressIndicator.innerText = `狀態：本輪 ${drawCount} 人抽獎完畢！`;
       updateUIStats();
-      showToast(`恭喜！${drawCount} 位得獎者已產生`, 'success');
+      showToast(`恭喜！${drawCount} 位得獎者已產生並已自動儲存進度`, 'success');
     }
 
     // 單一中獎者滾動跳動動畫 (含動態遞減速度緩動)
     function rollForSingleWinner(isFast) {
       return new Promise((resolve) => {
-        // 自抽獎池隨機決定最後中獎者 (隨機索引)
+        // 自剩餘池中隨機抽出
         const chosenIndex = Math.floor(Math.random() * state.availablePool.length);
         const targetWinner = state.availablePool[chosenIndex];
 
         // 滾動參數
-        const rollDuration = isFast ? 1200 : 2600; // 總持續時間
-        let intervalTime = 40;                      // 初始跳動頻率 (ms)
+        const rollDuration = isFast ? 1200 : 2500;
+        let intervalTime = 40;
         const startTime = Date.now();
 
-        // 名字跳動特效
         rollingPrimaryName.classList.remove('animate-pulse-glow', 'text-yellow-300');
         rollingPrimaryName.classList.add('text-slate-200');
 
         function step() {
           const elapsed = Date.now() - startTime;
-          
-          // 隨機從池中取一個名字展示在跑馬燈上
-          const randomDisplayCandidate = state.availablePool[Math.floor(Math.random() * state.availablePool.length)];
-          rollingSubtitle.innerText = `緊張開獎中... 編號: ${randomDisplayCandidate.id}`;
-          rollingPrimaryName.innerText = randomDisplayCandidate.name;
-          rollingExtraInfo.innerText = randomDisplayCandidate.extra || '';
+          const randomCandidate = state.availablePool[Math.floor(Math.random() * state.availablePool.length)];
+          rollingSubtitle.innerText = `緊張開獎中... 編號: ${randomCandidate.id}`;
+          rollingPrimaryName.innerText = randomCandidate.name;
+          rollingExtraInfo.innerText = randomCandidate.extra || '';
           playTickSound();
 
           if (elapsed < rollDuration) {
-            // 動態緩和效果：越接近結尾跳動越慢 (Easing Out)
             const progress = elapsed / rollDuration;
             intervalTime = 40 + Math.pow(progress, 3) * 220;
             setTimeout(step, intervalTime);
           } else {
-            // 抵達定案：鎖定中獎者
+            // 抵達定案
             rollingSubtitle.innerText = `🎉 恭喜中獎！編號: ${targetWinner.id}`;
             rollingPrimaryName.innerText = targetWinner.name;
             rollingPrimaryName.classList.add('animate-pulse-glow', 'text-yellow-300');
@@ -907,7 +1081,7 @@
       noWinnersPlaceholder.classList.add('hidden');
       winnersGrid.classList.remove('hidden');
 
-      // 產生中獎卡片 (支援直接點擊或按鈕編輯自訂備註)
+      // 產生中獎卡片
       winnersGrid.innerHTML = state.winners.map((w, index) => `
         <div class="bg-slate-800/90 border border-slate-700/80 hover:border-amber-400/50 transition-all rounded-xl p-3 flex items-center justify-between shadow-md">
           <div class="flex items-center gap-3">
@@ -920,7 +1094,7 @@
                 <span class="text-[11px] font-mono px-1.5 py-0.2 rounded bg-slate-700 text-amber-300">${escapeHtml(w.id)}</span>
               </div>
               <div class="flex items-center gap-1.5 mt-0.5">
-                <span class="text-[11px] text-slate-400 truncate max-w-[170px]" id="extra-text-${index}">
+                <span class="text-[11px] text-slate-400 truncate max-w-[170px]">
                   ${w.extra ? escapeHtml(w.extra) : '<span class="text-slate-600 italic">無備註</span>'}
                 </span>
                 <button type="button" onclick="editWinnerNote(${index})" class="text-slate-500 hover:text-amber-300 p-0.5 rounded transition" title="編輯備註">
@@ -939,7 +1113,7 @@
       `).join('');
     }
 
-    // 編輯中獎者備註功能 (改為自訂 Modal，避免瀏覽器/iframe 封鎖 prompt)
+    // 編輯中獎者備註功能
     window.editWinnerNote = function(index) {
       const winner = state.winners[index];
       if (!winner) return;
@@ -967,11 +1141,11 @@
       const winner = state.winners[currentEditingWinnerIndex];
       winner.extra = editNoteInput.value.trim();
       renderWinnersList();
-      showToast(`已更新【${winner.name}】的備註內容`, 'success');
+      saveStateToStorage(); // 備註修改後同步存檔
+      showToast(`已更新【${winner.name}】的備註並已自動保存`, 'success');
       closeNoteModal();
     });
 
-    // 點擊彈窗外圍背景亦可關閉
     editNoteModal.addEventListener('click', (e) => {
       if (e.target === editNoteModal) {
         closeNoteModal();
@@ -1018,7 +1192,7 @@
     });
 
     /* ==========================================================================
-       重設紀錄 (含抽獎池復原)
+       功能 1：僅重設得獎名單 (人員回流至抽獎候選池)
        ========================================================================== */
     resetWinnersBtn.addEventListener('click', () => {
       if (state.isRolling) return;
@@ -1027,21 +1201,90 @@
         return;
       }
 
-      // 清空中獎清單並重新把所有人回填到抽獎池
-      state.winners = [];
-      rebuildAvailablePool();
-      renderWinnersList();
-      rollingPrimaryName.innerText = '— 抽獎池已重設 —';
-      rollingPrimaryName.classList.remove('animate-pulse-glow', 'text-yellow-300');
-      rollingSubtitle.innerText = '所有人員已重新回到抽獎候選池中';
-      rollingExtraInfo.innerText = '';
-      stagePrizeLabel.innerText = '準備就緒';
-      showToast('已清除中獎名單，所有人員已回到候選池', 'info');
+      openConfirmModal(
+        '確定要重設得獎名單？',
+        '此操作將清空所有得獎紀錄，並將這些得獎者重新放回抽獎候選名單中，候選人名單本體不會遺失。',
+        () => {
+          state.winners = [];
+          rebuildAvailablePool();
+          renderWinnersList();
+          saveStateToStorage();
+
+          rollingPrimaryName.innerText = '— 抽獎池已重設 —';
+          rollingPrimaryName.classList.remove('animate-pulse-glow', 'text-yellow-300');
+          rollingSubtitle.innerText = '所有人員已重新回到抽獎候選池中';
+          rollingExtraInfo.innerText = '';
+          stagePrizeLabel.innerText = '準備就緒';
+          showToast('已清除中獎名單，所有人員已回到候選池並自動同步儲存', 'info');
+        }
+      );
     });
 
-    // 初始化狀態與獎項清單
-    renderPrizeList();
-    updateUIStats();
+    /* ==========================================================================
+       功能 2：徹底清除所有抽獎資料 (清除候選名單 + 歷史 + LocalStorage)
+       ========================================================================== */
+    clearAllDataBtn.addEventListener('click', () => {
+      if (state.isRolling) return;
+      
+      openConfirmModal(
+        '警告：確定徹底清除所有抽獎資料？',
+        '這將會清除您匯入的所有人員名單、所有已中獎資料、自訂獎項設定，並移除本網站於瀏覽器的全部存檔紀錄。確定要繼續嗎？',
+        () => {
+          // 僅精準移除本程式專屬的 key，絕不調用 localStorage.clear() 影響其他網頁
+          try {
+            localStorage.removeItem(STORAGE_KEY);
+          } catch (e) {
+            console.error('移除快取失敗:', e);
+          }
+
+          // 重設所有狀態
+          state.allCandidates = [];
+          state.availablePool = [];
+          state.winners = [];
+          state.sourceName = '';
+          state.prizeList = [
+            '頭獎 - 尊榮神秘大禮',
+            '貳獎 - 高級平板電腦',
+            '參獎 - 降噪真無線耳機',
+            '肆獎 - 智能氣炸烤箱',
+            '普獎 - 千元禮券'
+          ];
+
+          fileInfoText.innerText = '尚未載入名單';
+          excelFileInput.value = '';
+          prizeTitleInput.value = state.prizeList[0];
+          newPrizeInput.value = '';
+
+          rollingSubtitle.innerText = '等待載入抽獎名單...';
+          rollingPrimaryName.innerText = '— LUCKY DRAW —';
+          rollingPrimaryName.classList.remove('animate-pulse-glow', 'text-yellow-300');
+          rollingExtraInfo.innerText = '點擊左側「立即啟動抽獎」展開精彩環節';
+          stagePrizeLabel.innerText = '準備就緒';
+
+          renderPrizeList();
+          renderWinnersList();
+          updateUIStats();
+
+          if (storageStatusBadge) {
+            storageStatusBadge.className = 'text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 flex items-center gap-1';
+            storageStatusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>已清空快取`;
+          }
+
+          showToast('已徹底清除所有抽獎資料與本機存檔！', 'info');
+        }
+      );
+    });
+
+    /* ==========================================================================
+       系統初始化：嘗試讀取上次儲存之狀態
+       ========================================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      const restored = loadStateFromStorage();
+      if (!restored) {
+        renderPrizeList();
+        updateUIStats();
+      }
+    });
   </script>
 </body>
 </html>
